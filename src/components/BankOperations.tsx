@@ -1,14 +1,5 @@
 import { useEffect } from "react";
 
-interface BankInfoInterface {
-  client_id: string;
-  client_name: string;
-  client_balance: number;
-  client_pin: number;
-  client_transferblock: boolean;
-  client_transactions: BankTransactionsInterface[];
-}
-
 interface BankTransactionsInterface {
   transaction_id: string;
   transaction_sender: string;
@@ -16,6 +7,23 @@ interface BankTransactionsInterface {
   transaction_date: string;
   transaction_from: string;
   transaction_to: string;
+}
+
+interface BankAliasInterface {
+  alias_id: number;
+  alias_name: string;
+  alias_pin: number;
+  alias_transitions: BankTransactionsInterface[];
+}
+
+interface BankInfoInterface {
+  [x: string]: any;
+  client_id: string;
+  client_name: string;
+  client_balance: number;
+  client_password: number;
+  client_transferblock: boolean;
+  client_alias: BankAliasInterface[];
 }
 
 let initExecuted = false;
@@ -26,20 +34,21 @@ export function BankOperations() {
     initExecuted = true;
 
     const BankOperations: { [key: string]: BankInfoInterface } = {};
+
     const BankFunctions = {
       BankAccountManagment: {
-        createAccount(name: string, pin: number) {
+        createAccount(name: string, password: number) {
           const bank_client_id = "client." + Date.now();
-          if (pin.toString().length !== 4) return false;
-          if (BankOperations[name] && BankOperations[name].client_name)
-            return false;
+          if (password.toString().length !== 4) return false;
+          if (BankOperations[name]) return false;
+
           return (BankOperations[name] = {
             client_id: bank_client_id,
             client_name: name,
             client_balance: 0,
-            client_pin: pin,
+            client_password: password,
             client_transferblock: false,
-            client_transactions: [],
+            client_alias: [],
           });
         },
         deleteAccount(name: string) {
@@ -47,48 +56,67 @@ export function BankOperations() {
           return delete BankOperations[name];
         },
         findAccount(name: string) {
-          if (!BankOperations[name]) return false;
           return BankOperations[name] || null;
         },
-        getAllAcounts() {
+        getAllAccounts() {
           return Object.values(BankOperations);
         },
       },
+
       BankMoneyManagment: {
         addDepositMoney(name: string, amount: number) {
           if (!BankOperations[name]) return false;
-          return (BankOperations[name].client_balance += amount);
+          BankOperations[name].client_balance += amount;
+          return true;
         },
         removeDepositMoney(name: string, amount: number) {
           if (!BankOperations[name]) return false;
-          return (BankOperations[name].client_balance -= amount);
+          BankOperations[name].client_balance -= amount;
+          return true;
         },
-        sendTransferMoney(fromName: string, toName: string, amount: number) {
+        sendTransferMoney(
+          fromCard: number,
+          toCard: number,
+          fromName: string,
+          toName: string,
+          amount: number
+        ) {
           const transferID = "transfer." + Date.now();
-          const transferDate = "transferDate." + Date.now();
+          const transferDate = new Date().toString();
+
           if (!BankOperations[fromName] || !BankOperations[toName])
             return false;
           if (BankOperations[fromName].client_balance < amount) return false;
-          if (BankOperations[fromName && toName].client_transferblock)
+          if (
+            BankOperations[fromName].client_transferblock ||
+            BankOperations[toName].client_transferblock
+          )
             return false;
-          BankOperations[fromName].client_transactions.push({
+          if (
+            !BankOperations[fromName].client_alias[fromCard] ||
+            !BankOperations[toName].client_alias[toCard]
+          )
+            return false;
+
+          const transaction: BankTransactionsInterface = {
             transaction_id: transferID,
             transaction_sender: BankOperations[fromName].client_name,
             transaction_amount: amount,
             transaction_date: transferDate,
             transaction_from: BankOperations[fromName].client_id,
             transaction_to: BankOperations[toName].client_id,
-          });
-          BankOperations[toName].client_transactions.push({
-            transaction_id: transferID,
-            transaction_sender: BankOperations[fromName].client_name,
-            transaction_amount: amount,
-            transaction_date: transferDate,
-            transaction_from: BankOperations[fromName].client_id,
-            transaction_to: BankOperations[toName].client_id,
-          });
+          };
+
+          BankOperations[fromName].client_alias[
+            fromCard
+          ].alias_transitions.push(transaction);
+          BankOperations[toName].client_alias[toCard].alias_transitions.push(
+            transaction
+          );
+
           BankFunctions.BankMoneyManagment.addDepositMoney(toName, amount);
           BankFunctions.BankMoneyManagment.removeDepositMoney(fromName, amount);
+
           return true;
         },
         getBalance(name: string) {
@@ -96,45 +124,53 @@ export function BankOperations() {
           return BankOperations[name].client_balance;
         },
       },
+
       BankSecurityManagment: {
         setNewPin(name: string, newPin: number) {
           if (!BankOperations[name]) return false;
-          if (newPin.toString.length !== 4) return false;
-          return (BankOperations[name].client_pin = newPin);
+          if (newPin.toString().length !== 4) return false;
+
+          BankOperations[name].client_cards.forEach(
+            (card: { alias_pin: number }) => {
+              card.alias_pin = newPin;
+            }
+          );
+
+          return true;
         },
         verifyPin(name: string, verifyPin: number) {
           if (!BankOperations[name]) return false;
-          if (BankOperations[name].client_pin !== verifyPin) return false;
-          return true;
+          return BankOperations[name].client_cards.some(
+            (card: { alias_pin: number }) => card.alias_pin === verifyPin
+          );
         },
         blockTransferAccount(name: string) {
           if (!BankOperations[name]) return false;
-          return (BankOperations[name].client_transferblock =
-            !BankOperations[name].client_transferblock);
+          BankOperations[name].client_transferblock =
+            !BankOperations[name].client_transferblock;
+          return BankOperations[name].client_transferblock;
+        },
+      },
+      BankAliasManagment: {
+        createCard(
+          name: string,
+          card_id: number,
+          card_name: string,
+          pin: number
+        ) {
+          if (!BankOperations[name]) return false;
+          if (BankOperations[name].client_alias[card_id]) return false;
+          if (pin.toString().length !== 4) return false;
+          return (BankOperations[name].client_alias[card_id] = {
+            alias_id: card_id,
+            alias_name: card_name,
+            alias_pin: pin,
+            alias_transitions: [],
+          });
         },
       },
     };
-    console.log(
-      BankFunctions.BankAccountManagment.createAccount("Иван Иванов", 1234)
-    );
-    console.log(
-      BankFunctions.BankMoneyManagment.addDepositMoney("Иван Иванов", 1000)
-    );
-    console.log(
-      BankFunctions.BankAccountManagment.createAccount("Петр Петров", 4321)
-    );
-    console.log(
-      BankFunctions.BankMoneyManagment.addDepositMoney("Петр Петров", 500)
-    );
-    console.log(
-      BankFunctions.BankMoneyManagment.sendTransferMoney(
-        "Иван Иванов",
-        "Петр Петров",
-        300
-      )
-    );
-    console.log(BankFunctions.BankAccountManagment.findAccount("Иван Иванов"));
-    console.log(BankFunctions.BankAccountManagment.findAccount("Петр Петров"));
   }, []);
-  return true;
+
+  return null;
 }
