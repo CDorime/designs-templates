@@ -13,6 +13,7 @@ interface BankAliasInterface {
   alias_id: number;
   alias_name: string;
   alias_pin: number;
+  alias_balance: number;
   alias_transitions: BankTransactionsInterface[];
 }
 
@@ -20,7 +21,6 @@ interface BankInfoInterface {
   [x: string]: any;
   client_id: string;
   client_name: string;
-  client_balance: number;
   client_password: number;
   client_transferblock: boolean;
   client_alias: BankAliasInterface[];
@@ -45,7 +45,6 @@ export function BankOperations() {
           return (BankOperations[name] = {
             client_id: bank_client_id,
             client_name: name,
-            client_balance: 0,
             client_password: password,
             client_transferblock: false,
             client_alias: [],
@@ -64,15 +63,17 @@ export function BankOperations() {
       },
 
       BankMoneyManagment: {
-        addDepositMoney(name: string, amount: number) {
+        addDepositMoney(name: string, card_id: number, amount: number) {
           if (!BankOperations[name]) return false;
-          BankOperations[name].client_balance += amount;
-          return true;
+          if (!BankOperations[name].client_alias[card_id]) return false;
+          return (BankOperations[name].client_alias[card_id].alias_balance +=
+            amount);
         },
-        removeDepositMoney(name: string, amount: number) {
+        removeDepositMoney(name: string, card_id: number, amount: number) {
           if (!BankOperations[name]) return false;
-          BankOperations[name].client_balance -= amount;
-          return true;
+          if (!BankOperations[name].client_alias[card_id]) return false;
+          return (BankOperations[name].client_alias[card_id].alias_balance -=
+            amount);
         },
         sendTransferMoney(
           fromCard: number,
@@ -114,21 +115,22 @@ export function BankOperations() {
             transaction
           );
 
-          BankFunctions.BankMoneyManagment.addDepositMoney(toName, amount);
-          BankFunctions.BankMoneyManagment.removeDepositMoney(fromName, amount);
+          BankFunctions.BankMoneyManagment.addDepositMoney(toName, 0, amount);
+          BankFunctions.BankMoneyManagment.removeDepositMoney(
+            fromName,
+            0,
+            amount
+          );
 
           return true;
-        },
-        getBalance(name: string) {
-          if (!BankOperations[name]) return false;
-          return BankOperations[name].client_balance;
         },
       },
 
       BankSecurityManagment: {
-        setNewPin(name: string, newPin: number) {
+        setNewPin(name: string, card_id: number, newPin: number) {
           if (!BankOperations[name]) return false;
           if (newPin.toString().length !== 4) return false;
+          if (!BankOperations[name].client_alias[card_id]) return false;
 
           BankOperations[name].client_cards.forEach(
             (card: { alias_pin: number }) => {
@@ -165,11 +167,33 @@ export function BankOperations() {
             alias_id: card_id,
             alias_name: card_name,
             alias_pin: pin,
+            alias_balance: 0,
             alias_transitions: [],
           });
         },
+        deleteCard(name: string, card_id: number) {
+          if (!BankOperations[name]) return false;
+          if (!BankOperations[name].client_alias[card_id]) return false;
+          return delete BankOperations[name].client_alias[card_id];
+        },
       },
     };
+    console.log(
+      BankFunctions.BankAccountManagment.createAccount("user1", 1234)
+    );
+    console.log(
+      BankFunctions.BankAliasManagment.createCard("user1", 0, "Название", 1234)
+    );
+    console.log(
+      BankFunctions.BankMoneyManagment.addDepositMoney("user1", 0, 500)
+    );
+    console.log(BankFunctions.BankAccountManagment.findAccount("user1"));
+    console.log(BankFunctions.BankAccountManagment.getAllAccounts());
+
+    console.log(
+      BankFunctions.BankMoneyManagment.removeDepositMoney("user1", 0, 100)
+    );
+    (window as any).BankFunctions = BankFunctions;
   }, []);
 
   return null;
