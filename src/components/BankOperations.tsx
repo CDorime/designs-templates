@@ -1,29 +1,29 @@
 import { useEffect } from "react";
 
 interface BankTransactionsInterface {
-  transaction_id: string;
-  transaction_sender: string;
-  transaction_amount: number;
-  transaction_date: string;
-  transaction_from: string;
-  transaction_to: string;
+  transactionID: string;
+  transactionSender: string;
+  transactionAmount: number;
+  transactionDate: string;
+  transactionFrom: string;
+  transactionTo: string;
 }
 
 interface BankAliasInterface {
-  alias_id: number;
-  alias_name: string;
-  alias_pin: number;
-  alias_balance: number;
-  alias_is_blocked: boolean;
-  alias_transitions: BankTransactionsInterface[];
+  aliasID: number;
+  aliasclientName: string;
+  aliasPin: number;
+  aliasBalance: number;
+  aliasIsBlocked: boolean;
+  aliasTransactions: BankTransactionsInterface[];
 }
 
 interface BankInfoInterface {
   [x: string]: any;
-  client_id: string;
-  client_name: string;
-  client_password: number;
-  client_alias: BankAliasInterface[];
+  clientID: string;
+  clientclientName: string;
+  clientPassword: number;
+  clientAlias: BankAliasInterface[];
 }
 
 let initExecuted = false;
@@ -34,93 +34,106 @@ export function BankOperations() {
     initExecuted = true;
 
     const BankOperations: { [key: string]: BankInfoInterface } = {};
-
     const BankFunctions = {
       BankAccountManagment: {
-        createAccount(name: string, password: number) {
-          const bank_client_id = "client." + Date.now();
+        createAccount(clientName: string, password: number) {
+          const bankClientID = "client." + Date.now();
           if (password.toString().length !== 4) return false;
-          if (BankOperations[name]) return false;
+          if (BankOperations[clientName]) return false;
 
-          return (BankOperations[name] = {
-            client_id: bank_client_id,
-            client_name: name,
-            client_password: password,
-            client_alias: [],
+          return (BankOperations[clientName] = {
+            clientID: bankClientID,
+            clientclientName: clientName,
+            clientPassword: password,
+            clientAlias: [],
           });
         },
-        deleteAccount(name: string) {
-          if (!BankOperations[name]) return false;
-          return delete BankOperations[name];
+
+        deleteAccount(clientName: string) {
+          if (!BankOperations[clientName]) return false;
+          return delete BankOperations[clientName];
         },
-        findAccount(name: string) {
-          return BankOperations[name] || null;
+
+        findAccount(clientName: string) {
+          return BankOperations[clientName] || null;
         },
+
         getAllAccounts() {
           return Object.values(BankOperations);
         },
       },
 
       BankMoneyManagment: {
-        addDepositMoney(name: string, card_id: number, amount: number) {
-          if (!BankOperations[name]) return false;
-          if (!BankOperations[name].client_alias[card_id]) return false;
-          return (BankOperations[name].client_alias[card_id].alias_balance +=
+        addDepositMoney(clientName: string, cardID: number, amount: number) {
+          if (!BankOperations[clientName]) return false;
+          if (!BankOperations[clientName].clientAlias[cardID]) return false;
+
+          return (BankOperations[clientName].clientAlias[cardID].aliasBalance +=
             amount);
         },
-        removeDepositMoney(name: string, card_id: number, amount: number) {
-          if (!BankOperations[name]) return false;
-          if (!BankOperations[name].client_alias[card_id]) return false;
-          return (BankOperations[name].client_alias[card_id].alias_balance -=
+
+        removeDepositMoney(clientName: string, cardID: number, amount: number) {
+          if (!BankOperations[clientName]) return false;
+          if (!BankOperations[clientName].clientAlias[cardID]) return false;
+
+          return (BankOperations[clientName].clientAlias[cardID].aliasBalance -=
             amount);
         },
+
         sendTransferMoney(
           fromCard: number,
           toCard: number,
-          fromName: string,
-          toName: string,
+          fromclientName: string,
+          toclientName: string,
           amount: number
         ) {
           const transferID = "transfer." + Date.now();
           const transferDate = new Date().toString();
 
-          if (!BankOperations[fromName] || !BankOperations[toName])
+          if (!BankOperations[fromclientName] || !BankOperations[toclientName])
             return false;
           if (
-            BankOperations[fromName].client_alias[fromCard].alias_balance <
+            BankOperations[fromclientName].clientAlias[fromCard].aliasBalance <
             amount
           )
             return false;
           if (
-            BankOperations[fromName].client_transferblock ||
-            BankOperations[toName].client_transferblock
+            BankOperations[fromclientName].clientAlias[fromCard]
+              .aliasIsBlocked ||
+            BankOperations[toclientName].clientAlias[toCard].aliasIsBlocked
           )
             return false;
           if (
-            !BankOperations[fromName].client_alias[fromCard] ||
-            !BankOperations[toName].client_alias[toCard]
+            !BankOperations[fromclientName].clientAlias[fromCard] ||
+            !BankOperations[toclientName].clientAlias[toCard]
           )
             return false;
 
           const transaction: BankTransactionsInterface = {
-            transaction_id: transferID,
-            transaction_sender: BankOperations[fromName].client_name,
-            transaction_amount: amount,
-            transaction_date: transferDate,
-            transaction_from: BankOperations[fromName].client_id,
-            transaction_to: BankOperations[toName].client_id,
+            transactionID: transferID,
+            transactionSender: BankOperations[fromclientName].clientclientName,
+            transactionAmount: amount,
+            transactionDate: transferDate,
+            transactionFrom: BankOperations[fromclientName].clientID,
+            transactionTo: BankOperations[toclientName].clientID,
           };
 
-          BankOperations[fromName].client_alias[
+          BankOperations[fromclientName].clientAlias[
             fromCard
-          ].alias_transitions.push(transaction);
-          BankOperations[toName].client_alias[toCard].alias_transitions.push(
-            transaction
+          ].aliasTransactions.push(transaction);
+
+          BankOperations[toclientName].clientAlias[
+            toCard
+          ].aliasTransactions.push(transaction);
+
+          BankFunctions.BankMoneyManagment.addDepositMoney(
+            toclientName,
+            0,
+            amount
           );
 
-          BankFunctions.BankMoneyManagment.addDepositMoney(toName, 0, amount);
           BankFunctions.BankMoneyManagment.removeDepositMoney(
-            fromName,
+            fromclientName,
             0,
             amount
           );
@@ -130,87 +143,107 @@ export function BankOperations() {
       },
 
       BankSecurityManagment: {
-        setNewPin(name: string, card_id: number, newPin: number) {
-          if (!BankOperations[name]) return false;
+        setNewPin(clientclientName: string, cardID: number, newPin: number) {
+          if (!BankOperations[clientclientName]) return false;
           if (newPin.toString().length !== 4) return false;
-          if (!BankOperations[name].client_alias[card_id]) return false;
-          return (BankOperations[name].client_alias[card_id].alias_pin =
-            newPin);
+          if (!BankOperations[clientclientName].clientAlias[cardID])
+            return false;
+
+          return (BankOperations[clientclientName].clientAlias[
+            cardID
+          ].aliasPin = newPin);
         },
-        verifyPin(name: string, verifyPin: number) {
-          if (!BankOperations[name]) return false;
-          return BankOperations[name].client_cards.some(
-            (card: { alias_pin: number }) => card.alias_pin === verifyPin
+
+        verifyPin(clientclientName: string, verifyPin: number) {
+          if (!BankOperations[clientclientName]) return false;
+          return BankOperations[clientclientName].clientAlias.some(
+            (card: { aliasPin: number }) => card.aliasPin === verifyPin
           );
         },
       },
       BankAliasManagment: {
         createCard(
-          name: string,
-          card_id: number,
-          card_name: string,
+          clientclientName: string,
+          cardID: number,
+          cardclientName: string,
           pin: number
         ) {
-          if (!BankOperations[name]) return false;
-          if (BankOperations[name].client_alias[card_id]) return false;
-          if (pin.toString().length !== 4) return false;
-          if (Object.keys(BankOperations[name].client_alias).length >= 5)
+          if (!BankOperations[clientclientName]) return false;
+          if (BankOperations[clientclientName].clientAlias[cardID])
             return false;
-          return (BankOperations[name].client_alias[card_id] = {
-            alias_id: card_id,
-            alias_name: card_name,
-            alias_pin: pin,
-            alias_balance: 0,
-            alias_is_blocked: false,
-            alias_transitions: [],
+          if (pin.toString().length !== 4) return false;
+          if (
+            Object.keys(BankOperations[clientclientName].clientAlias).length >=
+            5
+          )
+            return false;
+
+          return (BankOperations[clientclientName].clientAlias[cardID] = {
+            aliasID: cardID,
+            aliasclientName: cardclientName,
+            aliasPin: pin,
+            aliasBalance: 0,
+            aliasIsBlocked: false,
+            aliasTransactions: [],
           });
         },
-        deleteCard(name: string, card_id: number) {
-          if (!BankOperations[name]) return false;
-          if (!BankOperations[name].client_alias[card_id]) return false;
-          if (!BankOperations[name].client_alias[card_id]) return false;
-          return delete BankOperations[name].client_alias[card_id];
+        deleteCard(clientclientName: string, cardID: number) {
+          if (!BankOperations[clientclientName]) return false;
+          if (!BankOperations[clientclientName].clientAlias[cardID])
+            return false;
+          if (!BankOperations[clientclientName].clientAlias[cardID])
+            return false;
+          return delete BankOperations[clientclientName].clientAlias[cardID];
         },
-        getCardByID(name: string, card_id: number) {
-          if (!BankOperations[name]) return false;
-          if (!BankOperations[name].client_alias[card_id]) return false;
-          return BankOperations[name].client_alias[card_id];
+        getCardByID(clientclientName: string, cardID: number) {
+          if (!BankOperations[clientclientName]) return false;
+          if (!BankOperations[clientclientName].clientAlias[cardID])
+            return false;
+          return BankOperations[clientclientName].clientAlias[cardID];
         },
-        getCardByName(name: string, card_name: string) {
-          if (!BankOperations[name]) return false;
-          if (!BankOperations[name].client_alias) return false;
-          return BankOperations[name].client_alias.find(
-            (alias) => alias.alias_name === card_name
+        getCardByclientName(clientclientName: string, cardclientName: string) {
+          if (!BankOperations[clientclientName]) return false;
+          if (!BankOperations[clientclientName].clientAlias) return false;
+          return BankOperations[clientclientName].clientAlias.find(
+            (alias) => alias.aliasclientName === cardclientName
           );
         },
-        renameCard(name: string, card_id: number, newCardName: string) {
-          if (!BankOperations[name]) return false;
-          if (!BankOperations[name].client_alias[card_id]) return false;
-          return (BankOperations[name].client_alias[card_id].alias_name =
-            newCardName);
+        reclientNameCard(
+          clientclientName: string,
+          cardID: number,
+          newCardclientName: string
+        ) {
+          if (!BankOperations[clientclientName]) return false;
+          if (!BankOperations[clientclientName].clientAlias[cardID])
+            return false;
+          return (BankOperations[clientclientName].clientAlias[
+            cardID
+          ].aliasclientName = newCardclientName);
         },
-        getAllCards(name: string) {
-          if (!BankOperations[name]) return false;
-          if (!BankOperations[name].client_alias) return false;
-          return Object.values(BankOperations[name].client_alias);
+        getAllCards(clientclientName: string) {
+          if (!BankOperations[clientclientName]) return false;
+          if (!BankOperations[clientclientName].clientAlias) return false;
+          return Object.values(BankOperations[clientclientName].clientAlias);
         },
-        getCardHistory(name: string, card_id: number) {
-          if (!BankOperations[name]) return false;
-          if (!BankOperations[name].client_alias[card_id]) return false;
+        getCardHistory(clientName: string, cardID: number) {
+          if (!BankOperations[clientName]) return false;
+          if (!BankOperations[clientName].clientAlias[cardID]) return false;
           return Object.values(
-            BankOperations[name].client_alias[card_id].alias_transitions
+            BankOperations[clientName].clientAlias[cardID].aliasTransactions
           );
         },
-        deleteAllCard(name: string) {
-          if (!BankOperations[name]) return false;
-          if (!BankOperations[name].client_alias) return false;
-          return (BankOperations[name].client_alias = []);
+        deleteAllCard(clientName: string) {
+          if (!BankOperations[clientName]) return false;
+          if (!BankOperations[clientName].clientAlias) return false;
+          return (BankOperations[clientName].clientAlias = []);
         },
-        lockCard(name: string, card_id: number) {
-          if (!BankOperations[name]) return false;
-          if (!BankOperations[name].client_alias[card_id]) return false;
-          return (BankOperations[name].client_alias[card_id].alias_is_blocked =
-            !BankOperations[name].client_alias[card_id].alias_is_blocked);
+        lockCard(clientName: string, cardID: number) {
+          if (!BankOperations[clientName]) return false;
+          if (!BankOperations[clientName].clientAlias[cardID]) return false;
+          return (BankOperations[clientName].clientAlias[
+            cardID
+          ].aliasIsBlocked =
+            !BankOperations[clientName].clientAlias[cardID].aliasIsBlocked);
         },
       },
     };
