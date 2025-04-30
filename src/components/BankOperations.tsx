@@ -14,6 +14,7 @@ interface BankAliasInterface {
   alias_name: string;
   alias_pin: number;
   alias_balance: number;
+  alias_is_blocked: boolean;
   alias_transitions: BankTransactionsInterface[];
 }
 
@@ -22,7 +23,6 @@ interface BankInfoInterface {
   client_id: string;
   client_name: string;
   client_password: number;
-  client_transferblock: boolean;
   client_alias: BankAliasInterface[];
 }
 
@@ -46,7 +46,6 @@ export function BankOperations() {
             client_id: bank_client_id,
             client_name: name,
             client_password: password,
-            client_transferblock: false,
             client_alias: [],
           });
         },
@@ -87,7 +86,11 @@ export function BankOperations() {
 
           if (!BankOperations[fromName] || !BankOperations[toName])
             return false;
-          if (BankOperations[fromName].client_balance < amount) return false;
+          if (
+            BankOperations[fromName].client_alias[fromCard].alias_balance <
+            amount
+          )
+            return false;
           if (
             BankOperations[fromName].client_transferblock ||
             BankOperations[toName].client_transferblock
@@ -131,26 +134,14 @@ export function BankOperations() {
           if (!BankOperations[name]) return false;
           if (newPin.toString().length !== 4) return false;
           if (!BankOperations[name].client_alias[card_id]) return false;
-
-          BankOperations[name].client_cards.forEach(
-            (card: { alias_pin: number }) => {
-              card.alias_pin = newPin;
-            }
-          );
-
-          return true;
+          return (BankOperations[name].client_alias[card_id].alias_pin =
+            newPin);
         },
         verifyPin(name: string, verifyPin: number) {
           if (!BankOperations[name]) return false;
           return BankOperations[name].client_cards.some(
             (card: { alias_pin: number }) => card.alias_pin === verifyPin
           );
-        },
-        blockTransferAccount(name: string) {
-          if (!BankOperations[name]) return false;
-          BankOperations[name].client_transferblock =
-            !BankOperations[name].client_transferblock;
-          return BankOperations[name].client_transferblock;
         },
       },
       BankAliasManagment: {
@@ -163,18 +154,63 @@ export function BankOperations() {
           if (!BankOperations[name]) return false;
           if (BankOperations[name].client_alias[card_id]) return false;
           if (pin.toString().length !== 4) return false;
+          if (Object.keys(BankOperations[name].client_alias).length >= 5)
+            return false;
           return (BankOperations[name].client_alias[card_id] = {
             alias_id: card_id,
             alias_name: card_name,
             alias_pin: pin,
             alias_balance: 0,
+            alias_is_blocked: false,
             alias_transitions: [],
           });
         },
         deleteCard(name: string, card_id: number) {
           if (!BankOperations[name]) return false;
           if (!BankOperations[name].client_alias[card_id]) return false;
+          if (!BankOperations[name].client_alias[card_id]) return false;
           return delete BankOperations[name].client_alias[card_id];
+        },
+        getCardByID(name: string, card_id: number) {
+          if (!BankOperations[name]) return false;
+          if (!BankOperations[name].client_alias[card_id]) return false;
+          return BankOperations[name].client_alias[card_id];
+        },
+        getCardByName(name: string, card_name: string) {
+          if (!BankOperations[name]) return false;
+          if (!BankOperations[name].client_alias) return false;
+          return BankOperations[name].client_alias.find(
+            (alias) => alias.alias_name === card_name
+          );
+        },
+        renameCard(name: string, card_id: number, newCardName: string) {
+          if (!BankOperations[name]) return false;
+          if (!BankOperations[name].client_alias[card_id]) return false;
+          return (BankOperations[name].client_alias[card_id].alias_name =
+            newCardName);
+        },
+        getAllCards(name: string) {
+          if (!BankOperations[name]) return false;
+          if (!BankOperations[name].client_alias) return false;
+          return Object.values(BankOperations[name].client_alias);
+        },
+        getCardHistory(name: string, card_id: number) {
+          if (!BankOperations[name]) return false;
+          if (!BankOperations[name].client_alias[card_id]) return false;
+          return Object.values(
+            BankOperations[name].client_alias[card_id].alias_transitions
+          );
+        },
+        deleteAllCard(name: string) {
+          if (!BankOperations[name]) return false;
+          if (!BankOperations[name].client_alias) return false;
+          return (BankOperations[name].client_alias = []);
+        },
+        lockCard(name: string, card_id: number) {
+          if (!BankOperations[name]) return false;
+          if (!BankOperations[name].client_alias[card_id]) return false;
+          return (BankOperations[name].client_alias[card_id].alias_is_blocked =
+            !BankOperations[name].client_alias[card_id].alias_is_blocked);
         },
       },
     };
