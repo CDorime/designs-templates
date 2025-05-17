@@ -1,0 +1,94 @@
+services:
+  app_mysql:
+    container_name: app_mysql
+    image: mysql:5.6.51
+    restart: unless-stopped
+    platform: linux/amd64
+    command:
+      [
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+        "--default-authentication-plugin=mysql_native_password",
+        "--bind-address=0.0.0.0",
+      ]
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./../sql-files/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./../volumes/mysql_data:/var/lib/mysql
+    env_file: ../../.env
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  app_phpmyadmin:
+    container_name: app_phpmyadmin
+    image: phpmyadmin
+    restart: unless-stopped
+    platform: linux/amd64
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=app_mysql
+      - PMA_USER=${MYSQL_USER}
+      - PMA_PASSWORD=${MYSQL_PASSWORD}
+      - COOKIE_SAMESITE=None
+    ports:
+      - "${PMA_EXTERNAL_PORT}:${PMA_INTERNAL_PORT}"
+    env_file: ../../.env
+    networks:
+      - app_network
+    depends_on:
+      - app_mysql
+  app_server:
+    build:
+      context: ./../../server/
+      dockerfile: ./../docker/dockerfiles/Dockerfile.app_server.development
+    container_name: app_server
+    volumes:
+      - ./../../server:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - BACKEND_PORT=${BACKEND_PORT}
+      - VITE_PROJECT_NAME=${VITE_PROJECT_NAME}
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    env_file: ../../.env
+    networks:
+      - app_network
+    depends_on:
+      - app_mysql
+  app_client:
+    build:
+      context: ./../../client/
+      dockerfile: ./../docker/dockerfiles/Dockerfile.app_client.development
+    container_name: app_client
+    volumes:
+      - ./../../client:/client
+      - /client/node_modules
+    environment:
+      - VITE_FRONTEND_PORT=${VITE_FRONTEND_PORT}
+      - VITE_PROJECT_NAME=${VITE_PROJECT_NAME}
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "${VITE_FRONTEND_PORT}:${VITE_FRONTEND_PORT}"
+    env_file: ../../.env
+    networks:
+      - app_network
+    depends_on:
+      - app_server
+networks:
+  app_network:
+    external: true

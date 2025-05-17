@@ -1,0 +1,94 @@
+.BankInterfaceSignUp {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100vh;
+  .BankInterfaceSignUpPageHeader {
+    color: white;
+    position: fixed;
+    width: 100vw;
+    z-index: 1000;
+    background: black;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.1vh 5vw;
+    box-shadow: 0 2px 8px white;
+    .SignUpPageHeaderLogotypeContent {
+      display: flex;
+      width: max-content;
+      cursor: pointer;
+      .BankSignUpInterfaceHeaderLogotype {
+        width: 100px;
+        user-select: none;
+      }
+      .BankInterfaceSignUpPageHeaderTitle {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+    }
+    .BankSignUpHeaderContent {
+      justify-content: center;
+      border: 0.25vh solid white;
+      cursor: pointer;
+      font-size: 1.25rem;
+      padding: 0.5em 1.5em;
+      border-radius: 1vh;
+      text-decoration: none;
+      color: white;
+      transition: 0.5s;
+      &:hover {
+        box-shadow: 0vh 0vh 3vh white;
+      }
+    }
+  }
+  .BankInterfaceSignUpForm {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5vh 3vw;
+    background: black;
+    box-shadow: 0 2px 8px white;
+    border-radius: 2vh;
+    margin: auto;
+    .BankInterfaceSignUpFormTitle {
+      color: white;
+      margin-bottom: 4vh;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    .BankInterfaceSignUpFormNameInput,
+    .BankInterfaceSignUpFormEmail,
+    .BankInterfaceSignUpFormPassword,
+    .BankInterfaceSignUpFormPhone,
+    .BankInterfaceSignUpFormAddress {
+      text-align: center;
+      margin-bottom: 1vh;
+      padding: 1.5vh 5vh;
+      background: white;
+      color: black;
+      outline: none;
+      border: none;
+      border-radius: 2vh;
+      transition: 0.5s;
+      &:hover {
+        box-shadow: 0vh 0vh 3vh white;
+      }
+    }
+    .BankInterfaceSignUpFormButton {
+      margin-top: 4vh;
+      padding: 1vh 4vh;
+      background: white;
+      border: none;
+      border-radius: 2vh;
+      cursor: pointer;
+      transition: 1s;
+      &:hover {
+        box-shadow: 0vh 0vh 3vh white;
+      }
+    }
+  }
+}

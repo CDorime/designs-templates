@@ -1,0 +1,86 @@
+.BankInterfaceProduction {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100vh;
+  background: white;
+  .BankInterfaceHeader {
+    color: white;
+    position: fixed;
+    width: 100vw;
+    z-index: 1000;
+    background: black;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.1vh 5vw;
+    box-shadow: 0 2px 8px white;
+    .BankInterfaceHeaderLogotypeContent {
+      display: flex;
+      width: max-content;
+      cursor: pointer;
+      .BankInterfaceHeaderLogotype {
+        width: 100px;
+        user-select: none;
+      }
+      .BankInterfaceHeaderLogotypeName {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+    }
+    .BankMainHeaderContainerRoutes {
+      display: flex;
+      gap: 3vh;
+      .BankMainHeaderContainerContent {
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.25rem;
+        padding: 0.5em 1.5em;
+        border-radius: 1vh;
+        text-decoration: none;
+        color: white;
+      }
+      .BankMainHeaderContent {
+        justify-content: center;
+        border: 0.25vh solid white;
+        cursor: pointer;
+        font-size: 1.25rem;
+        padding: 0.5em 1.5em;
+        border-radius: 1vh;
+        text-decoration: none;
+        color: white;
+        transition: 0.5s;
+        &:hover {
+          box-shadow: 0vh 0vh 5vh white;
+        }
+      }
+    }
+  }
+  .BankInterfaceMainPageAboutContainer,
+  .BankInterfaceMainPageHomeContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 5vh 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    margin-top: 5vh;
+    box-sizing: content-box;
+    .BankInterfaceMainPageHomeTitle {
+      margin-top: 2vh;
+      font-size: 2.5rem;
+      font-weight: bold;
+      text-align: center;
+    }
+    .BankInterfaceMainPageHomeText {
+      font-size: 1.2rem;
+      white-space: normal;
+      text-align: center;
+      line-height: 2;
+      margin: 1rem 0;
+    }
+  }
+}
