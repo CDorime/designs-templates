@@ -38,7 +38,11 @@ export function MainPageHeader({
   const routesArray: RoutesInterface[] = [
     {
       route_text: "Sign Up",
-      route_path: "/BankSignUpPage",
+      route_path: "/sign-up",
+    },
+    {
+      route_text: "Sign In",
+      route_path: "/sign-in",
     },
   ];
 

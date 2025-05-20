@@ -74,7 +74,7 @@
       border: none;
       border-radius: 2vh;
       transition: 0.5s;
-      &:hover {
+      &:focus {
         box-shadow: 0vh 0vh 3vh white;
       }
     }
@@ -89,6 +89,14 @@
       &:hover {
         box-shadow: 0vh 0vh 3vh white;
       }
+    }
+    .BankSignUpGoToSignInText {
+      margin-top: 2vh;
+      color: #fff;
+    }
+    .BankInterfaceSignUpGoToSignIn {
+      text-decoration: none;
+      color: #fff;
     }
   }
 }

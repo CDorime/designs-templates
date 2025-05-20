@@ -3,8 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import styles from "./styles/App.module.scss";
 import { BankMainPage } from "./pages/BankMainPage";
 import { BankSignUpPage } from "./pages/BankSignUpPage";
-
-
+import { BankSignInPage } from "./pages/BankSignInPage";
 
 export function App() {
   return (
@@ -13,7 +12,10 @@ export function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<BankMainPage />} />
-            <Route path="BankSignUpPage" element={<BankSignUpPage />} />
+            <Route path="*" element={<BankMainPage />} />
+
+            <Route path="sign-up" element={<BankSignUpPage />} />
+            <Route path="sign-in" element={<BankSignInPage />} />
           </Routes>
         </BrowserRouter>
       </section>

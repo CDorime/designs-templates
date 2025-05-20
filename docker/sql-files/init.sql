@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS cards (
   client_id INT NOT NULL,
   card_name VARCHAR(32) NOT NULL,
   card_pin CHAR(4) NOT NULL,
-  card_balance DECIMAL(15,2) DEFAULT 0,
+  card_balance DECIMAL(15,2) DEFAULT NULL,
   is_blocked BOOLEAN DEFAULT FALSE,
   FOREIGN KEY (client_id) REFERENCES clients(client_id) ON DELETE CASCADE
 );
